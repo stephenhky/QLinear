@@ -30,15 +30,15 @@ def inv_qft_gate(nbdigits):
     return circuit.to_gate()
 
 
-def phase_estimation_circuit(gate, nbdigits, initial_momopartite_state=[0, 1]):
+def phase_estimation_circuit(gate, nbdigits, initial_monopartite_state=[0, 1]):
     # customized controlled gate
     controlled_gate = gate.control(1)
     # initial_state
-    assert len(initial_momopartite_state) == 2
-    assert np.linalg.norm(initial_momopartite_state) == 1
+    assert len(initial_monopartite_state) == 2
+    assert np.linalg.norm(initial_monopartite_state) == 1
     initial_state = np.zeros(2**(nbdigits+1), dtype=np.complex_)
-    initial_state[0] = initial_momopartite_state[0]
-    initial_state[2**nbdigits] = initial_momopartite_state[1]
+    initial_state[0] = initial_monopartite_state[0]
+    initial_state[2**nbdigits] = initial_monopartite_state[1]
 
     # building the circuit
     circuit = QuantumCircuit(nbdigits + 1, nbdigits)
@@ -47,7 +47,6 @@ def phase_estimation_circuit(gate, nbdigits, initial_momopartite_state=[0, 1]):
     for i in range(nbdigits):
         for _ in range(2 ** (i)):
             circuit.append(controlled_gate, [i, nbdigits])
-            # circuit.cp(2*pi*theta, i, nbdigits)
     circuit.append(inv_qft_gate(nbdigits), range(nbdigits))
     circuit.measure(range(nbdigits), range(nbdigits))
 
