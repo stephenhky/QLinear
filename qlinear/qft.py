@@ -30,12 +30,24 @@ def inv_qft_gate(nbdigits):
     return circuit.to_gate()
 
 
-def phase_estimation_circuit(gate, nbdigits, teststate_nbdigits, initial_monopartite_state=np.array([0, 1])):
+def phase_estimation_gate(gate, nbdigits, teststate_nbdigits):
     # customized controlled gate
     controlled_gate = gate.control(1)
 
+    # preparing for the circuit
+    circuit = QuantumCircuit(nbdigits + teststate_nbdigits)
+    circuit.h(range(nbdigits))
+    for i in range(nbdigits):
+        for _ in range(2 ** (i)):
+            circuit.append(controlled_gate, [i] + [j + nbdigits for j in range(teststate_nbdigits)])
+    circuit.append(inv_qft_gate(nbdigits), range(nbdigits))
+
+    return circuit.to_gate()
+
+
+def phase_estimation_circuit(gate, nbdigits, teststate_nbdigits, initial_monopartite_state=np.array([0, 1])):
     # initial_state
-    assert len(initial_monopartite_state) == 2**teststate_nbdigits
+    assert len(initial_monopartite_state) == 2 ** teststate_nbdigits
     assert np.linalg.norm(initial_monopartite_state) == 1
     initial_state = np.zeros(2 ** (nbdigits + teststate_nbdigits), dtype=np.complex_)
     for i in range(2 ** teststate_nbdigits):
@@ -44,12 +56,10 @@ def phase_estimation_circuit(gate, nbdigits, teststate_nbdigits, initial_monopar
     # building the circuit
     circuit = QuantumCircuit(nbdigits + teststate_nbdigits, nbdigits)
     circuit.initialize(initial_state)
-    circuit.h(range(nbdigits))
-    for i in range(nbdigits):
-        for _ in range(2 ** (i)):
-            circuit.append(controlled_gate, [i]+[j+nbdigits for j in range(teststate_nbdigits)])
-    circuit.append(inv_qft_gate(nbdigits), range(nbdigits))
+    circuit.append(
+        phase_estimation_gate(gate, nbdigits, teststate_nbdigits),
+        range(nbdigits + teststate_nbdigits)
+    )
     circuit.measure(range(nbdigits), range(nbdigits))
 
     return circuit
-
