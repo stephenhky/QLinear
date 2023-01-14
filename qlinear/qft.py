@@ -78,3 +78,12 @@ def phase_estimation_circuit(gate, nbdigits, teststate_nbdigits, initial_monopar
     circuit.measure(range(nbdigits), range(nbdigits))
 
     return circuit
+
+
+def evolution_operator(A):
+    assert np.all(A == np.conj(A.T))
+    eigvals, eigvecs = np.linalg.eig(A)
+    U = np.diag(np.exp(2 * pi * (1.j) * eigvals))
+    U = np.dot(np.dot(eigvecs, U), eigvecs.T)
+    return U
+    # scipy.linalp.expm
